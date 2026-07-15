@@ -21,6 +21,7 @@ actor FolderScanner {
     private let fileManager = FileManager.default
     private let classifier: FileClassifier
     private let contentAnalyzer: LocalContentAnalyzer
+    private let collectionRoots: Set<URL>
     private let resourceKeys: Set<URLResourceKey> = [
         .isRegularFileKey, .isDirectoryKey, .isSymbolicLinkKey, .isPackageKey,
         .fileSizeKey, .contentModificationDateKey, .isHiddenKey
@@ -44,9 +45,17 @@ actor FolderScanner {
         "app", "lib", "src", "source", "sources", "test", "tests"
     ]
 
-    init(classifier: FileClassifier = FileClassifier(), contentAnalyzer: LocalContentAnalyzer? = nil) {
+    init(
+        classifier: FileClassifier = FileClassifier(),
+        contentAnalyzer: LocalContentAnalyzer? = nil,
+        collectionRoots: Set<URL>? = nil
+    ) {
         self.classifier = classifier
         self.contentAnalyzer = contentAnalyzer ?? LocalContentAnalyzer(preferences: .defaults)
+        self.collectionRoots = collectionRoots ?? Set(
+            [FileManager.SearchPathDirectory.downloadsDirectory, .desktopDirectory, .documentDirectory]
+                .compactMap { FileManager.default.urls(for: $0, in: .userDomainMask).first?.standardizedFileURL }
+        )
     }
 
     func scan(rootURL: URL, progress: @escaping ProgressHandler) async throws -> FolderScanResult {
@@ -55,7 +64,7 @@ actor FolderScanner {
         if isProjectMarker(root) {
             throw FolderScanError.selectedRootIsProject(root.path)
         }
-        if try containsDirectProjectMarker(root) {
+        if try selectedRootLooksLikeProject(root) {
             throw FolderScanError.selectedRootIsProject(root.path)
         }
         let topLevelURLs = try fileManager.contentsOfDirectory(
@@ -284,13 +293,31 @@ actor FolderScanner {
         }
     }
 
-    private func containsDirectProjectMarker(_ directory: URL) throws -> Bool {
+    private func selectedRootLooksLikeProject(_ directory: URL) throws -> Bool {
         let children = try fileManager.contentsOfDirectory(
             at: directory,
-            includingPropertiesForKeys: nil,
+            includingPropertiesForKeys: [.isDirectoryKey],
             options: []
         )
-        return children.contains(where: isProjectMarker) || looksLikeSourceTree(children)
+        if children.contains(where: { $0.lastPathComponent == ".git" }) { return true }
+        if collectionRoots.contains(directory.standardizedFileURL) { return false }
+
+        let markerCount = children.filter(isProjectMarker).count
+        let hasProjectBundle = children.contains { projectBundleExtensions.contains($0.pathExtension.lowercased()) }
+        var hasSourceFile = false
+        var hasSourceDirectory = false
+        for child in children where !child.lastPathComponent.hasPrefix(".") {
+            let isDirectory = (try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+            if isDirectory {
+                hasSourceDirectory = hasSourceDirectory || sourceDirectoryNames.contains(child.lastPathComponent.lowercased())
+            } else {
+                hasSourceFile = hasSourceFile || sourceExtensions.contains(child.pathExtension.lowercased())
+            }
+        }
+        return hasProjectBundle
+            || looksLikeSourceTree(children)
+            || markerCount >= 2
+            || (markerCount == 1 && (hasSourceFile || hasSourceDirectory))
     }
 
     private func containsProjectMarker(_ directory: URL, depth: Int, inspected: Int) throws -> Bool {

@@ -8,11 +8,52 @@ final class FunctionalSafetyTests: XCTestCase {
         let rootURL = try makeTemporaryDirectory()
         try write("{}", to: rootURL.appendingPathComponent("package.json"))
         try write("notes", to: rootURL.appendingPathComponent("README.md"))
+        let sourceURL = rootURL.appendingPathComponent("src", isDirectory: true)
+        try FileManager.default.createDirectory(at: sourceURL, withIntermediateDirectories: true)
+        try write("console.log('project')", to: sourceURL.appendingPathComponent("index.js"))
 
         let scanner = FolderScanner()
         do {
             _ = try await scanner.scan(rootURL: rootURL) { _ in }
             XCTFail("Expected a selected project root to be rejected")
+        } catch let error as FolderScanError {
+            guard case .selectedRootIsProject = error else {
+                return XCTFail("Unexpected scan error: \(error)")
+            }
+        }
+    }
+
+    func testScannerAllowsCollectionWithAnUncorroboratedProjectMarker() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        try write("{}", to: rootURL.appendingPathComponent("package.json"))
+        try write("invoice", to: rootURL.appendingPathComponent("invoice.pdf"))
+
+        let result = try await FolderScanner().scan(rootURL: rootURL) { _ in }
+
+        XCTAssertEqual(result.scannedFileCount, 2)
+        XCTAssertTrue(result.organisationItems.contains { $0.name == "invoice.pdf" })
+    }
+
+    func testScannerAllowsProjectLikeFilesInConfiguredCollectionRoot() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        try write("{}", to: rootURL.appendingPathComponent("package.json"))
+        try write("console.log('download')", to: rootURL.appendingPathComponent("download.js"))
+
+        let result = try await FolderScanner(collectionRoots: [rootURL]).scan(rootURL: rootURL) { _ in }
+
+        XCTAssertEqual(result.scannedFileCount, 2)
+    }
+
+    func testScannerRejectsGitRootEvenWhenConfiguredAsCollection() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        try FileManager.default.createDirectory(
+            at: rootURL.appendingPathComponent(".git", isDirectory: true),
+            withIntermediateDirectories: true
+        )
+
+        do {
+            _ = try await FolderScanner(collectionRoots: [rootURL]).scan(rootURL: rootURL) { _ in }
+            XCTFail("Expected a direct Git root to be rejected")
         } catch let error as FolderScanError {
             guard case .selectedRootIsProject = error else {
                 return XCTFail("Unexpected scan error: \(error)")
