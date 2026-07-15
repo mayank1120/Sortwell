@@ -113,6 +113,51 @@ final class FunctionalSafetyTests: XCTestCase {
         XCTAssertTrue(duplicateGroup.copies.contains { $0.name == "loose.txt" && !$0.isProtected })
     }
 
+    func testScannerExcludesTopLevelSymbolicLinks() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let outsideURL = try makeTemporaryDirectory().appendingPathComponent("outside.txt")
+        try write("outside", to: outsideURL)
+        try FileManager.default.createSymbolicLink(
+            at: rootURL.appendingPathComponent("linked.txt"),
+            withDestinationURL: outsideURL
+        )
+        try write("inside", to: rootURL.appendingPathComponent("inside.txt"))
+
+        let result = try await FolderScanner().scan(rootURL: rootURL) { _ in }
+
+        XCTAssertFalse(result.organisationItems.contains { $0.name == "linked.txt" })
+        XCTAssertFalse(result.needsReviewItems.contains { $0.name == "linked.txt" })
+        XCTAssertEqual(result.scannedFileCount, 1)
+    }
+
+    func testScannerExcludesTopLevelSymbolicDirectories() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let outsideURL = try makeTemporaryDirectory()
+        try write("outside", to: outsideURL.appendingPathComponent("invoice.pdf"))
+        try FileManager.default.createSymbolicLink(
+            at: rootURL.appendingPathComponent("Linked Folder"),
+            withDestinationURL: outsideURL
+        )
+
+        let result = try await FolderScanner().scan(rootURL: rootURL) { _ in }
+
+        XCTAssertFalse(result.organisationItems.contains { $0.name == "Linked Folder" })
+        XCTAssertFalse(result.needsReviewItems.contains { $0.name == "Linked Folder" })
+        XCTAssertEqual(result.scannedFileCount, 0)
+    }
+
+    func testScannerDetectsEmptyFileDuplicates() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        try Data().write(to: rootURL.appendingPathComponent("empty-a.txt"))
+        try Data().write(to: rootURL.appendingPathComponent("empty-b.txt"))
+
+        let result = try await FolderScanner().scan(rootURL: rootURL) { _ in }
+
+        let group = try XCTUnwrap(result.duplicateGroups.first)
+        XCTAssertEqual(group.copies.map(\.name), ["empty-a.txt", "empty-b.txt"])
+        XCTAssertEqual(group.copies.map(\.size), [0, 0])
+    }
+
     func testExecutorMovesWithoutOverwritingAndUndoRestores() async throws {
         let rootURL = try makeTemporaryDirectory()
         let sourceURL = rootURL.appendingPathComponent("record.pdf")
@@ -197,6 +242,94 @@ final class FunctionalSafetyTests: XCTestCase {
             XCTAssertEqual(journal.trashCount, 0)
         }
         XCTAssertEqual(try String(contentsOf: sourceURL, encoding: .utf8), "unique replacement")
+    }
+
+    func testExecutorRefusesTopLevelSymbolicLink() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let outsideURL = try makeTemporaryDirectory().appendingPathComponent("outside.txt")
+        let symbolicLinkURL = rootURL.appendingPathComponent("linked.txt")
+        try write("outside", to: outsideURL)
+        try FileManager.default.createSymbolicLink(at: symbolicLinkURL, withDestinationURL: outsideURL)
+        let plan = FileOperationPlan(
+            id: "symbolic-link-test",
+            rootURL: rootURL,
+            rootBookmarkData: nil,
+            moveOperations: [
+                .init(
+                    id: "linked",
+                    sourceURL: symbolicLinkURL,
+                    category: "Other Documents",
+                    expectedSnapshot: .init(size: 7, modificationDate: nil)
+                )
+            ],
+            trashOperations: []
+        )
+
+        do {
+            _ = try await FileOperationExecutor(journalDirectory: rootURL.appendingPathComponent("Journals"))
+                .apply(plan) { _ in }
+            XCTFail("Expected Apply to reject a symbolic link")
+        } catch let error as FileOperationError {
+            guard case .partialApply(let journal, _) = error else {
+                return XCTFail("Unexpected operation error: \(error)")
+            }
+            XCTAssertTrue(journal.entries.isEmpty)
+        }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: symbolicLinkURL.path))
+        XCTAssertEqual(try String(contentsOf: outsideURL, encoding: .utf8), "outside")
+    }
+
+    func testExecutorRefusesSymbolicOrganisedFilesDirectory() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let outsideURL = try makeTemporaryDirectory()
+        let sourceURL = rootURL.appendingPathComponent("record.txt")
+        try write("record", to: sourceURL)
+        try FileManager.default.createSymbolicLink(
+            at: rootURL.appendingPathComponent("Organised Files"),
+            withDestinationURL: outsideURL
+        )
+        let executor = FileOperationExecutor(journalDirectory: rootURL.appendingPathComponent("Journals"))
+
+        do {
+            _ = try await executor.apply(movePlan(id: "symbolic-output-test", rootURL: rootURL, sources: [sourceURL])) { _ in }
+            XCTFail("Expected Apply to reject a symbolic Organised Files directory")
+        } catch let error as FileOperationError {
+            guard case .partialApply(let journal, _) = error else {
+                return XCTFail("Unexpected operation error: \(error)")
+            }
+            XCTAssertTrue(journal.entries.isEmpty)
+        }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: sourceURL.path))
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: outsideURL.path).isEmpty)
+    }
+
+    func testExecutorRefusesSymbolicCategoryDirectory() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let outsideURL = try makeTemporaryDirectory()
+        let organisedURL = rootURL.appendingPathComponent("Organised Files", isDirectory: true)
+        let sourceURL = rootURL.appendingPathComponent("record.txt")
+        try FileManager.default.createDirectory(at: organisedURL, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(
+            at: organisedURL.appendingPathComponent("Other Documents"),
+            withDestinationURL: outsideURL
+        )
+        try write("record", to: sourceURL)
+        let executor = FileOperationExecutor(journalDirectory: rootURL.appendingPathComponent("Journals"))
+
+        do {
+            _ = try await executor.apply(movePlan(id: "symbolic-category-test", rootURL: rootURL, sources: [sourceURL])) { _ in }
+            XCTFail("Expected Apply to reject a symbolic category directory")
+        } catch let error as FileOperationError {
+            guard case .partialApply(let journal, _) = error else {
+                return XCTFail("Unexpected operation error: \(error)")
+            }
+            XCTAssertTrue(journal.entries.isEmpty)
+        }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: sourceURL.path))
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: outsideURL.path).isEmpty)
     }
 
     func testApplyPreflightPreventsEarlierTrashWhenLaterCategoryIsInvalid() async throws {
@@ -555,6 +688,105 @@ final class FunctionalSafetyTests: XCTestCase {
 
         XCTAssertEqual(try String(contentsOf: outsideURL, encoding: .utf8), "keep")
         XCTAssertFalse(FileManager.default.fileExists(atPath: storedJournalURL.path))
+    }
+
+    func testJournalLoadReportCountsUnreadableFiles() throws {
+        let rootURL = try makeTemporaryDirectory()
+        let journalDirectory = rootURL.appendingPathComponent("Journals", isDirectory: true)
+        try FileManager.default.createDirectory(at: journalDirectory, withIntermediateDirectories: true)
+        let validJournal = OperationJournal(
+            id: "valid",
+            rootPath: rootURL.path,
+            rootBookmarkData: nil,
+            createdAt: Date(),
+            completedAt: Date(),
+            undoneAt: nil,
+            journalPath: journalDirectory.appendingPathComponent("valid.json").path,
+            failureDescription: nil,
+            entries: []
+        )
+        try writeJournal(validJournal, to: journalDirectory.appendingPathComponent("valid.json"))
+        try write("not valid JSON", to: journalDirectory.appendingPathComponent("broken.json"))
+        try write("ignored", to: journalDirectory.appendingPathComponent("notes.txt"))
+
+        let report = FileOperationExecutor.loadJournalReport(from: journalDirectory)
+
+        XCTAssertEqual(report.journals.map(\.id), ["valid"])
+        XCTAssertEqual(report.unreadableCount, 1)
+        XCTAssertFalse(report.directoryReadFailed)
+    }
+
+    func testJournalLoadReportIdentifiesInaccessibleDirectory() throws {
+        let rootURL = try makeTemporaryDirectory()
+        let fileURL = rootURL.appendingPathComponent("not-a-directory")
+        try write("file", to: fileURL)
+
+        let report = FileOperationExecutor.loadJournalReport(from: fileURL)
+
+        XCTAssertTrue(report.journals.isEmpty)
+        XCTAssertTrue(report.directoryReadFailed)
+    }
+
+    func testUndoReportsUnresolvableRootBookmarkAsUnavailable() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let journalURL = rootURL.appendingPathComponent("invalid-bookmark.json")
+        try writeJournal(
+            OperationJournal(
+                id: "invalid-bookmark",
+                rootPath: rootURL.path,
+                rootBookmarkData: Data("not a bookmark".utf8),
+                createdAt: Date(),
+                completedAt: Date(),
+                undoneAt: nil,
+                journalPath: journalURL.path,
+                failureDescription: nil,
+                entries: []
+            ),
+            to: journalURL
+        )
+
+        do {
+            _ = try await FileOperationExecutor().undo(journalURL: journalURL) { _ in }
+            XCTFail("Expected an invalid root bookmark to require reauthorization")
+        } catch let error as FileOperationError {
+            guard case .bookmarkUnavailable(let path) = error else {
+                return XCTFail("Unexpected bookmark error: \(error)")
+            }
+            XCTAssertEqual(path, rootURL.path)
+        }
+    }
+
+    func testRootReauthorizationRejectsDifferentFolder() async throws {
+        let rootURL = try makeTemporaryDirectory()
+        let otherURL = try makeTemporaryDirectory()
+        let journalURL = rootURL.appendingPathComponent("session.json")
+        try writeJournal(
+            OperationJournal(
+                id: "session",
+                rootPath: rootURL.path,
+                rootBookmarkData: nil,
+                createdAt: Date(),
+                completedAt: Date(),
+                undoneAt: nil,
+                journalPath: journalURL.path,
+                failureDescription: nil,
+                entries: []
+            ),
+            to: journalURL
+        )
+
+        do {
+            try await FileOperationExecutor().reauthorizeRoot(
+                journalURL: journalURL,
+                rootURL: otherURL,
+                bookmarkData: Data()
+            )
+            XCTFail("Expected reauthorization to reject a different folder")
+        } catch let error as FileOperationError {
+            guard case .unsafeSource = error else {
+                return XCTFail("Unexpected reauthorization error: \(error)")
+            }
+        }
     }
 
     @MainActor

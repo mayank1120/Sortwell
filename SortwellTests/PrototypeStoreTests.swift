@@ -123,7 +123,49 @@ final class PrototypeStoreTests: XCTestCase {
 
         XCTAssertEqual(store.activity.first?.moveCount, 0)
         XCTAssertEqual(store.activity.first?.trashCount, 0)
+        XCTAssertTrue(store.activity.first?.categoryMoveCounts.isEmpty == true)
         XCTAssertTrue(store.operationWasStopped)
+    }
+
+    func testStoppedSessionCategoryCountsMatchCompletedMoves() throws {
+        let store = PrototypeStore(loadPersistedActivity: false)
+        store.beginApplying()
+        store.applyProgress = 0.5
+
+        store.completeSession(didFinish: false)
+
+        let session = try XCTUnwrap(store.activity.first)
+        XCTAssertEqual(session.categoryMoveCounts.values.reduce(0, +), session.moveCount)
+        XCTAssertEqual(
+            store.categories.reduce(0) { $0 + store.completedCategoryMoveCount($1.title) },
+            session.moveCount
+        )
+    }
+
+    func testStartingNewScanClearsPreviousResultState() {
+        let store = PrototypeStore(loadPersistedActivity: false)
+        store.completedSessionID = "previous-session"
+        store.operationWasStopped = true
+
+        store.startScan()
+
+        XCTAssertNil(store.completedSessionID)
+        XCTAssertFalse(store.operationWasStopped)
+        XCTAssertEqual(store.route, .scan)
+    }
+
+    func testCannotApplyAPlanWithNoActions() {
+        let store = PrototypeStore(loadPersistedActivity: false)
+        for index in store.planItems.indices {
+            store.planItems[index].isSelected = false
+        }
+        store.route = .review
+
+        store.beginApplying()
+
+        XCTAssertEqual(store.route, .review)
+        XCTAssertTrue(store.showNoticeAlert)
+        XCTAssertEqual(store.totalActionCount, 0)
     }
 
     func testRealStopWaitsForExecutor() {

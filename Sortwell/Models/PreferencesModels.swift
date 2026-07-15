@@ -97,6 +97,15 @@ struct PreferencesRepository: Sendable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(preferences).write(to: fileURL, options: .atomic)
     }
+
+    func preserveUnreadableFile() throws -> URL? {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+        let preservedURL = fileURL.deletingLastPathComponent().appendingPathComponent(
+            "Preferences.invalid-\(UUID().uuidString).json"
+        )
+        try FileManager.default.moveItem(at: fileURL, to: preservedURL)
+        return preservedURL
+    }
 }
 
 enum PreferencesError: LocalizedError {

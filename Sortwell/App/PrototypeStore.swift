@@ -18,6 +18,8 @@ final class PrototypeStore {
     var needsReviewItems = TelegramScenario.needsReviewItems
     var protectedProjects = TelegramScenario.protectedProjects
     var activity = TelegramScenario.previousActivity
+    var unreadableJournalCount = 0
+    var journalDirectoryReadFailed = false
 
     var selectedPlanItemID: String? = TelegramScenario.planItems.first?.id
     var selectedDuplicateGroupID: String? = TelegramScenario.duplicateGroups.first?.id
@@ -50,12 +52,39 @@ final class PrototypeStore {
     @ObservationIgnored private var preferencesRepository: PreferencesRepository
 
     init(loadPersistedActivity: Bool = true, preferencesRepository: PreferencesRepository? = nil) {
-        let repository = preferencesRepository ?? (try? .live()) ?? .temporary()
+        let repository: PreferencesRepository
+        var initializationWarning: String?
+        if let preferencesRepository {
+            repository = preferencesRepository
+        } else {
+            do {
+                repository = try .live()
+            } catch {
+                repository = .temporary()
+                initializationWarning = "Sortwell could not open its settings folder. Settings changes will last only for this session: \(error.localizedDescription)"
+            }
+        }
         self.preferencesRepository = repository
-        preferences = (try? repository.load()) ?? .defaults
+        do {
+            preferences = try repository.load()
+        } catch {
+            let preservedURL = try? repository.preserveUnreadableFile()
+            preferences = .defaults
+            let preservedMessage = preservedURL.map {
+                " The unreadable file was preserved as \($0.lastPathComponent)."
+            } ?? ""
+            initializationWarning = "Saved settings could not be loaded, so Sortwell is using safe defaults.\(preservedMessage)"
+        }
         shouldLoadPersistedActivity = loadPersistedActivity
-        activity = Self.activitySessions(loadPersistedActivity: loadPersistedActivity)
+        let activityState = Self.activityState(loadPersistedActivity: loadPersistedActivity)
+        activity = activityState.sessions
+        unreadableJournalCount = activityState.unreadableJournalCount
+        journalDirectoryReadFailed = activityState.journalDirectoryReadFailed
         categories = Self.sampleCategories(preferences: preferences)
+        if let initializationWarning {
+            noticeMessage = initializationWarning
+            showNoticeAlert = true
+        }
     }
 
     var scannedFileCount: Int { latestScanResult?.scannedFileCount ?? 8_203 }
@@ -189,6 +218,12 @@ final class PrototypeStore {
         }.count
     }
 
+    func completedCategoryMoveCount(_ category: String) -> Int {
+        guard let completedSessionID,
+              let session = activity.first(where: { $0.id == completedSessionID }) else { return 0 }
+        return session.categoryMoveCounts[category, default: 0]
+    }
+
     var selectedPlanItem: PlanItem? {
         planItems.first { $0.id == selectedPlanItemID }
     }
@@ -299,7 +334,10 @@ final class PrototypeStore {
         do {
             let executor = FileOperationExecutor()
             _ = try await executor.pruneExpiredRecovery(retentionDays: preferences.recoveryRetentionDays)
-            activity = Self.activitySessions(loadPersistedActivity: shouldLoadPersistedActivity)
+            let activityState = Self.activityState(loadPersistedActivity: shouldLoadPersistedActivity)
+            activity = activityState.sessions
+            unreadableJournalCount = activityState.unreadableJournalCount
+            journalDirectoryReadFailed = activityState.journalDirectoryReadFailed
         } catch {
             showNotice("Recovery cleanup could not finish: \(error.localizedDescription)")
         }
@@ -352,6 +390,8 @@ final class PrototypeStore {
     func startScan(mode: ScanMode = .sample) {
         scanMode = mode
         activeScanID = UUID()
+        completedSessionID = nil
+        operationWasStopped = false
         latestScanResult = nil
         scanProgress = 0
         scanStatus = FolderScanProgress.Phase.inventory.rawValue
@@ -439,6 +479,11 @@ final class PrototypeStore {
     }
 
     func beginApplying() {
+        guard totalActionCount > 0 else {
+            showConfirmation = false
+            showNotice("There are no approved actions to apply. Select at least one organisation move or duplicate cleanup action.")
+            return
+        }
         showConfirmation = false
         applyProgress = 0
         applyStatus = "Preparing approved actions"
@@ -484,7 +529,8 @@ final class PrototypeStore {
             dateDescription: "Just now",
             moveCount: completedMoves,
             trashCount: completedTrashActions,
-            isUndone: false
+            isUndone: false,
+            categoryMoveCounts: completedCategoryCounts(moveLimit: completedMoves)
         )
         activity.removeAll { $0.id == session.id }
         activity.insert(session, at: 0)
@@ -571,7 +617,10 @@ final class PrototypeStore {
         completedSessionID = nil
         undoInProgressSessionID = nil
         applyStatus = "Preparing approved actions"
-        activity = Self.activitySessions(loadPersistedActivity: shouldLoadPersistedActivity)
+        let activityState = Self.activityState(loadPersistedActivity: shouldLoadPersistedActivity)
+        activity = activityState.sessions
+        unreadableJournalCount = activityState.unreadableJournalCount
+        journalDirectoryReadFailed = activityState.journalDirectoryReadFailed
     }
 
     private func runRealScan(folderURL: URL, scanID: UUID) async {
@@ -816,7 +865,8 @@ final class PrototypeStore {
             trashCount: journal.trashCount,
             isUndone: false,
             journalPath: journal.journalPath,
-            isPartial: journal.completedAt == nil || journal.failureDescription != nil
+            isPartial: journal.completedAt == nil || journal.failureDescription != nil,
+            categoryMoveCounts: Self.categoryMoveCounts(from: journal)
         )
         activity.removeAll { $0.id == session.id }
         activity.insert(session, at: 0)
@@ -824,17 +874,69 @@ final class PrototypeStore {
     }
 
     private func undoRealSession(id: String, journalPath: String) async {
+        let journalURL = URL(fileURLWithPath: journalPath)
+        let executor = FileOperationExecutor()
+        var completed = false
         do {
-            let executor = FileOperationExecutor()
-            _ = try await executor.undo(journalURL: URL(fileURLWithPath: journalPath)) { _ in }
-            if let index = activity.firstIndex(where: { $0.id == id }) {
-                activity[index].isUndone = true
+            _ = try await executor.undo(journalURL: journalURL) { _ in }
+            completed = true
+        } catch let error as FileOperationError {
+            if case .bookmarkUnavailable(let path) = error,
+               let journal = try? FileOperationExecutor.loadJournal(at: journalURL),
+               path == journal.rootPath {
+                do {
+                    guard let authorization = try requestRootAuthorization(for: URL(fileURLWithPath: journal.rootPath)) else {
+                        showNotice("Undo still needs access to the original folder. You can retry from Activity when it is available.")
+                        undoInProgressSessionID = nil
+                        return
+                    }
+                    try await executor.reauthorizeRoot(
+                        journalURL: journalURL,
+                        rootURL: authorization.url,
+                        bookmarkData: authorization.bookmarkData
+                    )
+                    _ = try await executor.undo(journalURL: journalURL) { _ in }
+                    completed = true
+                } catch {
+                    showNotice("Sortwell could not restore access for Undo: \(error.localizedDescription)")
+                }
+            } else {
+                showNotice("Sortwell could not undo this session: \(error.localizedDescription)")
             }
         } catch {
             showNotice("Sortwell could not undo this session: \(error.localizedDescription)")
         }
+        if completed, let index = activity.firstIndex(where: { $0.id == id }) {
+            activity[index].isUndone = true
+        }
         undoInProgressSessionID = nil
         await performRecoveryMaintenance()
+    }
+
+    private func requestRootAuthorization(for expectedURL: URL) throws -> (url: URL, bookmarkData: Data)? {
+        let panel = NSOpenPanel()
+        panel.title = "Restore Folder Access"
+        panel.prompt = "Grant Access"
+        panel.message = "Select the original \(expectedURL.lastPathComponent) folder so Sortwell can continue Undo."
+        panel.directoryURL = expectedURL.deletingLastPathComponent()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+        guard panel.runModal() == .OK, let selectedURL = panel.url else { return nil }
+
+        let standardURL = selectedURL.standardizedFileURL
+        guard standardURL == expectedURL.standardizedFileURL else {
+            throw FileOperationError.unsafeSource(standardURL.path)
+        }
+        let accessed = standardURL.startAccessingSecurityScopedResource()
+        defer { if accessed { standardURL.stopAccessingSecurityScopedResource() } }
+        let bookmarkData = try standardURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        return (standardURL, bookmarkData)
     }
 
     private func loadSampleScenario() {
@@ -882,25 +984,49 @@ final class PrototypeStore {
         }
     }
 
-    private static func activitySessions(loadPersistedActivity: Bool) -> [ActivitySession] {
-        let realSessions: [ActivitySession]
-        if loadPersistedActivity {
-            realSessions = FileOperationExecutor.loadPersistedJournals().map { journal in
-                ActivitySession(
-                    id: journal.id,
-                    folderName: URL(fileURLWithPath: journal.rootPath).lastPathComponent,
-                    dateDescription: journal.createdAt.formatted(date: .abbreviated, time: .shortened),
-                    moveCount: journal.moveCount,
-                    trashCount: journal.trashCount,
-                    isUndone: journal.undoneAt != nil,
-                    journalPath: journal.journalPath,
-                    isPartial: journal.completedAt == nil || journal.failureDescription != nil
-                )
-            }
-        } else {
-            realSessions = []
+    private static func activityState(
+        loadPersistedActivity: Bool
+    ) -> (sessions: [ActivitySession], unreadableJournalCount: Int, journalDirectoryReadFailed: Bool) {
+        guard loadPersistedActivity else { return (TelegramScenario.previousActivity, 0, false) }
+        let report = FileOperationExecutor.loadPersistedJournalReport()
+        let realSessions = report.journals.map { journal in
+            ActivitySession(
+                id: journal.id,
+                folderName: URL(fileURLWithPath: journal.rootPath).lastPathComponent,
+                dateDescription: journal.createdAt.formatted(date: .abbreviated, time: .shortened),
+                moveCount: journal.moveCount,
+                trashCount: journal.trashCount,
+                isUndone: journal.undoneAt != nil,
+                journalPath: journal.journalPath,
+                isPartial: journal.completedAt == nil || journal.failureDescription != nil,
+                categoryMoveCounts: categoryMoveCounts(from: journal)
+            )
         }
-        return loadPersistedActivity ? realSessions : TelegramScenario.previousActivity
+        return (realSessions, report.unreadableCount, report.directoryReadFailed)
+    }
+
+    private func completedCategoryCounts(moveLimit: Int) -> [String: Int] {
+        let removableCopyIDs = Set(duplicateGroups.flatMap(\.removableCopyIDs))
+        let approvedCategories = planItems.compactMap { item in
+            item.isSelected && !removableCopyIDs.contains(item.id) ? item.proposedCategory : nil
+        } + needsReviewItems.compactMap { item in
+            guard !removableCopyIDs.contains(item.id) else { return nil }
+            return item.selectedCategory
+        }
+        return approvedCategories.prefix(moveLimit).reduce(into: [:]) { counts, category in
+            counts[category, default: 0] += 1
+        }
+    }
+
+    private static func categoryMoveCounts(from journal: OperationJournal) -> [String: Int] {
+        journal.entries.reduce(into: [:]) { counts, entry in
+            guard entry.action == .move,
+                  entry.status != .planned,
+                  entry.status != .notApplied,
+                  let destinationPath = entry.destinationPath else { return }
+            let category = URL(fileURLWithPath: destinationPath).deletingLastPathComponent().lastPathComponent
+            counts[category, default: 0] += 1
+        }
     }
 }
 

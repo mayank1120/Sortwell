@@ -87,4 +87,26 @@ final class PreferencesTests: XCTestCase {
 
         XCTAssertFalse(store.activity.contains { $0.id == "downloads" })
     }
+
+    @MainActor
+    func testStorePreservesUnreadablePreferencesAndReportsFallback() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SortwellInvalidPreferencesTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let preferencesURL = directory.appendingPathComponent("Preferences.json")
+        try Data("not valid JSON".utf8).write(to: preferencesURL)
+
+        let store = PrototypeStore(
+            loadPersistedActivity: false,
+            preferencesRepository: .init(fileURL: preferencesURL)
+        )
+
+        XCTAssertEqual(store.preferences, .defaults)
+        XCTAssertTrue(store.showNoticeAlert)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: preferencesURL.path))
+        let preservedFiles = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+            .filter { $0.hasPrefix("Preferences.invalid-") }
+        XCTAssertEqual(preservedFiles.count, 1)
+    }
 }

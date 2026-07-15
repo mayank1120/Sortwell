@@ -70,7 +70,7 @@ actor FolderScanner {
             try Task.checkCancellation()
             await progress(.init(phase: .projects, completed: index + 1, total: topLevelURLs.count, currentPath: url.path))
             let values = try url.resourceValues(forKeys: resourceKeys)
-            guard values.isDirectory == true else { continue }
+            guard values.isDirectory == true, values.isSymbolicLink != true else { continue }
             if url.lastPathComponent == "Organised Files" {
                 protectedRoots[url] = .init(reason: "Existing Sortwell output is left unchanged.", isProject: false)
             } else if let reason = projectReason(for: url) {
@@ -166,7 +166,9 @@ actor FolderScanner {
             try Task.checkCancellation()
             let values = try url.resourceValues(forKeys: resourceKeys)
             if values.isHidden == true || protectedRoots[url] != nil { continue }
+            guard values.isSymbolicLink != true else { continue }
             let isDirectory = values.isDirectory == true
+            guard isDirectory || values.isRegularFile == true else { continue }
             let size = isDirectory ? folderSize(url, from: allFiles) : Int64(values.fileSize ?? 0)
             let analysis: LocalContentAnalysis
             if isDirectory {
@@ -217,7 +219,7 @@ actor FolderScanner {
         in files: [FileRecord],
         progress: @escaping ProgressHandler
     ) async throws -> (actionable: [ScannedDuplicateGroup], protectedCount: Int) {
-        let sizeGroups = Dictionary(grouping: files.filter { $0.size > 0 }, by: \.size)
+        let sizeGroups = Dictionary(grouping: files, by: \.size)
             .filter { $0.value.count > 1 }
             .sorted { $0.key < $1.key }
         let candidates = sizeGroups.flatMap { group in

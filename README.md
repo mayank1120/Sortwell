@@ -6,7 +6,16 @@ Sortwell is a native macOS, local-first file organiser. It scans a user-selected
 
 Download the latest DMG from [GitHub Releases](https://github.com/mayank1120/Sortwell/releases), open it, and drag Sortwell into Applications.
 
-Current prerelease builds are ad hoc signed but not Apple-notarised. On first launch, macOS may prevent the app from opening. In Finder, Control-click Sortwell, choose **Open**, then confirm **Open**. On some macOS versions you may instead need to choose **Open Anyway** under **System Settings > Privacy & Security**.
+Current prerelease builds are ad hoc signed but not Apple-notarised. This means macOS may report that Apple cannot verify the app or check it for malicious software.
+
+To open the current prerelease:
+
+1. Drag Sortwell from the DMG into Applications.
+2. Try to open Sortwell once, then dismiss the warning.
+3. Open **System Settings > Privacy & Security** and scroll to **Security**.
+4. Click **Open Anyway** beside the Sortwell message, authenticate, then confirm **Open**.
+
+On older macOS versions, you can instead Control-click Sortwell in Finder, choose **Open**, then confirm **Open**. This manual override does not provide Apple verification; a future Developer ID-signed and notarised build will open normally.
 
 ## Open and Run
 

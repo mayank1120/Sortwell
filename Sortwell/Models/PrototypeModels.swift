@@ -225,4 +225,5 @@ struct ActivitySession: Identifiable, Hashable {
     var isUndone: Bool
     var journalPath: String? = nil
     var isPartial: Bool = false
+    var categoryMoveCounts: [String: Int] = [:]
 }

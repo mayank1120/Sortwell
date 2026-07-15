@@ -149,7 +149,7 @@ struct OperationJournalEntry: Identifiable, Sendable, Codable, Hashable {
 struct OperationJournal: Identifiable, Sendable, Codable, Hashable {
     let id: String
     let rootPath: String
-    let rootBookmarkData: Data?
+    var rootBookmarkData: Data?
     let createdAt: Date
     var completedAt: Date?
     var undoneAt: Date?
@@ -164,4 +164,10 @@ struct OperationJournal: Identifiable, Sendable, Codable, Hashable {
     var trashCount: Int {
         entries.filter { $0.action == .trash && $0.status != .planned && $0.status != .notApplied }.count
     }
+}
+
+struct OperationJournalLoadReport: Sendable {
+    let journals: [OperationJournal]
+    let unreadableCount: Int
+    let directoryReadFailed: Bool
 }

@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import PDFKit
 import XCTest
 @testable import Sortwell
 
@@ -81,6 +83,41 @@ final class ClassificationAnalysisTests: XCTestCase {
         XCTAssertTrue(analysis.metadataText.isEmpty)
     }
 
+    @MainActor
+    func testImageAnalysisReportsDimensionsWithoutOCR() async throws {
+        let imageData = try makePNGData(width: 10, height: 20)
+        let fileURL = try makeTemporaryFile(name: "dimensions.png", data: imageData)
+        var preferences = SortwellPreferences.defaults
+        preferences.ocrEnabled = false
+
+        let analysis = try await LocalContentAnalyzer(preferences: preferences).analyse(fileURL)
+
+        XCTAssertTrue(analysis.metadataText.contains("10 by 20 pixels"))
+        XCTAssertEqual(analysis.evidenceDescription, "image metadata")
+    }
+
+    @MainActor
+    func testPDFAnalysisIncludesDocumentMetadata() async throws {
+        let document = PDFDocument()
+        let image = try XCTUnwrap(NSImage(data: makePNGData(width: 100, height: 100)))
+        let page = try XCTUnwrap(PDFPage(image: image))
+        document.insert(page, at: 0)
+        document.documentAttributes = [
+            PDFDocumentAttribute.titleAttribute: "Quarterly statement",
+            PDFDocumentAttribute.authorAttribute: "Sortwell Tests"
+        ]
+        let fileURL = try makeTemporaryFile(name: "metadata.pdf", data: Data())
+        XCTAssertTrue(document.write(to: fileURL))
+        var preferences = SortwellPreferences.defaults
+        preferences.ocrEnabled = false
+
+        let analysis = try await LocalContentAnalyzer(preferences: preferences).analyse(fileURL)
+
+        XCTAssertTrue(analysis.metadataText.contains("Quarterly statement"))
+        XCTAssertTrue(analysis.metadataText.contains("Sortwell Tests"))
+        XCTAssertEqual(analysis.evidenceDescription, "PDF metadata")
+    }
+
     private func makeTemporaryFile(name: String, data: Data) throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("SortwellAnalysisTests-\(UUID().uuidString)", isDirectory: true)
@@ -89,5 +126,23 @@ final class ClassificationAnalysisTests: XCTestCase {
         let url = directory.appendingPathComponent(name)
         try data.write(to: url)
         return url
+    }
+
+    private func makePNGData(width: Int, height: Int) throws -> Data {
+        let bitmap = try XCTUnwrap(
+            NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: width,
+                pixelsHigh: height,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+            )
+        )
+        return try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
     }
 }

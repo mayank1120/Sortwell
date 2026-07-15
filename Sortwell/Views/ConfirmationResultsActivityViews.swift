@@ -76,6 +76,7 @@ struct ConfirmationView: View {
                 }
                 .buttonStyle(SortwellPrimaryButtonStyle())
                 .keyboardShortcut(.defaultAction)
+                .disabled(store.totalActionCount == 0)
             }
             .padding(.horizontal, 24)
             .frame(height: 68)
@@ -289,13 +290,13 @@ struct ResultsView: View {
                             Label("Organised Files", systemImage: "folder.fill")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(SortwellPalette.sage)
-                            ForEach(store.categories.prefix(6)) { category in
+                            ForEach(store.categories) { category in
                                 HStack {
                                     Image(systemName: category.icon)
                                         .frame(width: 18)
                                     Text(category.title)
                                     Spacer()
-                                    Text(store.categoryMoveCount(category.title).formatted())
+                                    Text(store.completedCategoryMoveCount(category.title).formatted())
                                         .monospacedDigit()
                                 }
                                 .font(.system(size: 11))
@@ -381,6 +382,32 @@ struct ActivityView: View {
                     store.route = store.completedSessionID == nil ? .welcome : .results
                 }
                 .buttonStyle(SortwellSecondaryButtonStyle())
+            }
+
+            if store.unreadableJournalCount > 0 {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(SortwellPalette.amber)
+                    Text("Sortwell could not read \(store.unreadableJournalCount) saved activity \(store.unreadableJournalCount == 1 ? "journal" : "journals"). Existing files were left unchanged.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(SortwellPalette.secondaryText)
+                    Spacer()
+                }
+                .padding(13)
+                .background(RoundedRectangle(cornerRadius: 10).fill(SortwellPalette.amberSoft))
+            }
+
+            if store.journalDirectoryReadFailed {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(SortwellPalette.amber)
+                    Text("Sortwell could not access the saved Activity folder. Existing files were left unchanged; restore folder access and relaunch Sortwell to try again.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(SortwellPalette.secondaryText)
+                    Spacer()
+                }
+                .padding(13)
+                .background(RoundedRectangle(cornerRadius: 10).fill(SortwellPalette.amberSoft))
             }
 
             ScrollView {
@@ -484,25 +511,40 @@ struct ActivityDetailView: View {
             DividerLine()
 
             if let journal {
-                Table(journal.entries) {
-                    TableColumn("Action") { entry in
-                        Label(entry.action == .move ? "Move" : "Trash", systemImage: entry.action == .move ? "folder" : "trash")
+                VStack(spacing: 0) {
+                    if let failureDescription = journal.failureDescription {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(SortwellPalette.amber)
+                            Text("Operation stopped: \(failureDescription)")
+                                .font(.system(size: 11))
+                                .foregroundStyle(SortwellPalette.secondaryText)
+                            Spacer()
+                        }
+                        .padding(14)
+                        .background(SortwellPalette.amberSoft)
                     }
-                    .width(80)
-                    TableColumn("Original location") { entry in
-                        Text(entry.sourcePath).font(.system(size: 10, design: .monospaced)).lineLimit(2)
+
+                    Table(journal.entries) {
+                        TableColumn("Action") { entry in
+                            Label(entry.action == .move ? "Move" : "Trash", systemImage: entry.action == .move ? "folder" : "trash")
+                        }
+                        .width(80)
+                        TableColumn("Original location") { entry in
+                            Text(entry.sourcePath).font(.system(size: 10, design: .monospaced)).lineLimit(2)
+                        }
+                        TableColumn("Destination") { entry in
+                            Text(entry.destinationPath ?? entry.recoveryPath ?? "Not applied")
+                                .font(.system(size: 10, design: .monospaced))
+                                .lineLimit(2)
+                        }
+                        TableColumn("Status") { entry in
+                            Text(entry.status.title)
+                        }
+                        .width(85)
                     }
-                    TableColumn("Destination") { entry in
-                        Text(entry.destinationPath ?? entry.recoveryPath ?? "Not applied")
-                            .font(.system(size: 10, design: .monospaced))
-                            .lineLimit(2)
-                    }
-                    TableColumn("Status") { entry in
-                        Text(entry.status.title)
-                    }
-                    .width(85)
+                    .padding(16)
                 }
-                .padding(16)
             } else {
                 ContentUnavailableView("Journal unavailable", systemImage: "list.bullet.clipboard")
             }

@@ -58,6 +58,17 @@ actor FileOperationExecutor {
         OperationJournalStore.loadAll(fileManager: fileManager)
     }
 
+    nonisolated static func loadPersistedJournalReport(fileManager: FileManager = .default) -> OperationJournalLoadReport {
+        OperationJournalStore.loadReport(fileManager: fileManager)
+    }
+
+    nonisolated static func loadJournalReport(
+        from directory: URL,
+        fileManager: FileManager = .default
+    ) -> OperationJournalLoadReport {
+        OperationJournalStore.loadReport(from: directory, fileManager: fileManager)
+    }
+
     nonisolated static func loadJournal(at url: URL) throws -> OperationJournal {
         try OperationJournalStore.read(from: url)
     }
@@ -73,7 +84,7 @@ actor FileOperationExecutor {
             guard journal.completedAt != nil,
                   journal.failureDescription == nil,
                   (journal.undoneAt ?? journal.completedAt ?? journal.createdAt) < cutoff else { continue }
-            let rootURL = try resolveURL(path: journal.rootPath, bookmarkData: journal.rootBookmarkData)
+            let rootURL = try resolveURL(path: journal.rootPath, bookmarkData: journal.rootBookmarkData).url
             let accessed = rootURL.startAccessingSecurityScopedResource()
             if journal.rootBookmarkData != nil, !accessed { continue }
             defer { if accessed { rootURL.stopAccessingSecurityScopedResource() } }
@@ -185,8 +196,10 @@ actor FileOperationExecutor {
                 let currentSnapshot = try snapshot(for: operation.sourceURL)
                 let currentHash = try sha256IfRegularFile(operation.sourceURL)
                 let categoryURL = organisedRoot.appendingPathComponent(try categoryFolderName(operation.category), isDirectory: true)
-                try fileManager.createDirectory(at: categoryURL, withIntermediateDirectories: true)
+                try ensureDestinationDirectory(organisedRoot, parent: plan.rootURL)
+                try ensureDestinationDirectory(categoryURL, parent: organisedRoot)
                 let destinationURL = availableDestinationURL(for: operation.sourceURL, in: categoryURL)
+                try validateDestinationDirectory(categoryURL, parent: organisedRoot)
                 journal.entries.append(
                     .init(
                         id: operation.id,
@@ -224,13 +237,19 @@ actor FileOperationExecutor {
 
     func undo(journalURL: URL, progress: @escaping ProgressHandler) async throws -> OperationJournal {
         var journal = try readJournal(from: journalURL)
-        let rootURL = try resolveURL(path: journal.rootPath, bookmarkData: journal.rootBookmarkData)
+        let rootResolution = try resolveURL(path: journal.rootPath, bookmarkData: journal.rootBookmarkData)
+        let rootURL = rootResolution.url
         let rootAccessed = rootURL.startAccessingSecurityScopedResource()
         if journal.rootBookmarkData != nil, !rootAccessed {
             throw FileOperationError.bookmarkUnavailable(journal.rootPath)
         }
         defer {
             if rootAccessed { rootURL.stopAccessingSecurityScopedResource() }
+        }
+        if rootResolution.bookmarkIsStale,
+           let refreshedBookmark = try? makeSecurityBookmark(for: rootURL) {
+            journal.rootBookmarkData = refreshedBookmark
+            try? write(journal, to: journalURL)
         }
 
         let total = journal.entries.filter { $0.status != .notApplied }.count
@@ -291,10 +310,15 @@ actor FileOperationExecutor {
             var scopedTrashURL: URL?
             if entry.action == .trash {
                 if let bookmarkData = entry.destinationBookmarkData {
-                    if let url = try? resolveURL(path: destinationPath, bookmarkData: bookmarkData),
-                       url.startAccessingSecurityScopedResource() {
-                        resolvedDestinationURL = url
-                        scopedTrashURL = url
+                    if let resolution = try? resolveURL(path: destinationPath, bookmarkData: bookmarkData),
+                       resolution.url.startAccessingSecurityScopedResource() {
+                        resolvedDestinationURL = resolution.url
+                        scopedTrashURL = resolution.url
+                        if resolution.bookmarkIsStale,
+                           let refreshedBookmark = try? makeSecurityBookmark(for: resolution.url) {
+                            journal.entries[index].destinationBookmarkData = refreshedBookmark
+                            try? write(journal, to: journalURL)
+                        }
                     } else {
                         resolvedDestinationURL = nil
                     }
@@ -354,11 +378,25 @@ actor FileOperationExecutor {
         return journal
     }
 
+    func reauthorizeRoot(journalURL: URL, rootURL: URL, bookmarkData: Data) throws {
+        var journal = try readJournal(from: journalURL)
+        guard URL(fileURLWithPath: journal.rootPath).standardizedFileURL == rootURL.standardizedFileURL else {
+            throw FileOperationError.unsafeSource(rootURL.path)
+        }
+        journal.rootBookmarkData = bookmarkData
+        try write(journal, to: journalURL)
+    }
+
     private func validateSource(_ sourceURL: URL, isInside rootURL: URL) throws {
         guard fileManager.fileExists(atPath: sourceURL.path) else {
             throw FileOperationError.sourceMissing(sourceURL.path)
         }
         guard sourceURL.isDescendantOrEqual(of: rootURL) else {
+            throw FileOperationError.unsafeSource(sourceURL.path)
+        }
+        let values = try sourceURL.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey])
+        guard values.isSymbolicLink != true,
+              values.isDirectory == true || values.isRegularFile == true else {
             throw FileOperationError.unsafeSource(sourceURL.path)
         }
     }
@@ -381,10 +419,34 @@ actor FileOperationExecutor {
         }
 
         let organisedRoot = plan.rootURL.appendingPathComponent("Organised Files", isDirectory: true)
-        var isDirectory: ObjCBool = false
-        if fileManager.fileExists(atPath: organisedRoot.path, isDirectory: &isDirectory), !isDirectory.boolValue {
-            throw FileOperationError.destinationChanged(organisedRoot.path)
+        try validateDestinationDirectory(organisedRoot, parent: plan.rootURL)
+        for operation in plan.moveOperations {
+            let categoryURL = organisedRoot.appendingPathComponent(
+                try categoryFolderName(operation.category),
+                isDirectory: true
+            )
+            try validateDestinationDirectory(categoryURL, parent: organisedRoot)
         }
+    }
+
+    private func validateDestinationDirectory(_ url: URL, parent: URL) throws {
+        let standardURL = url.standardizedFileURL
+        guard standardURL.deletingLastPathComponent() == parent.standardizedFileURL else {
+            throw FileOperationError.destinationChanged(url.path)
+        }
+        guard fileManager.fileExists(atPath: standardURL.path) else { return }
+        let values = try standardURL.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard values.isDirectory == true, values.isSymbolicLink != true else {
+            throw FileOperationError.destinationChanged(url.path)
+        }
+    }
+
+    private func ensureDestinationDirectory(_ url: URL, parent: URL) throws {
+        try validateDestinationDirectory(url, parent: parent)
+        if !fileManager.fileExists(atPath: url.path) {
+            try fileManager.createDirectory(at: url, withIntermediateDirectories: false)
+        }
+        try validateDestinationDirectory(url, parent: parent)
     }
 
     private func validateTopLevelSource(_ sourceURL: URL, root rootURL: URL) throws {
@@ -524,15 +586,22 @@ actor FileOperationExecutor {
         try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
     }
 
-    private func resolveURL(path: String, bookmarkData: Data?) throws -> URL {
-        guard let bookmarkData else { return URL(fileURLWithPath: path) }
+    private func resolveURL(path: String, bookmarkData: Data?) throws -> ResolvedURL {
+        guard let bookmarkData else {
+            return .init(url: URL(fileURLWithPath: path), bookmarkIsStale: false)
+        }
         var isStale = false
-        return try URL(
-            resolvingBookmarkData: bookmarkData,
-            options: .withSecurityScope,
-            relativeTo: nil,
-            bookmarkDataIsStale: &isStale
-        )
+        do {
+            let url = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+            return .init(url: url, bookmarkIsStale: isStale)
+        } catch {
+            throw FileOperationError.bookmarkUnavailable(path)
+        }
     }
 
     private func makeJournalURL(for id: String) throws -> URL {
@@ -548,6 +617,11 @@ actor FileOperationExecutor {
     private func readJournal(from url: URL) throws -> OperationJournal {
         try OperationJournalStore.read(from: url)
     }
+
+    private struct ResolvedURL {
+        let url: URL
+        let bookmarkIsStale: Bool
+    }
 }
 
 private enum OperationJournalStore {
@@ -559,18 +633,38 @@ private enum OperationJournalStore {
     }
 
     static func loadAll(fileManager: FileManager) -> [OperationJournal] {
-        guard let directory = try? defaultDirectory(fileManager: fileManager) else { return [] }
-        return loadAll(from: directory, fileManager: fileManager)
+        loadReport(fileManager: fileManager).journals
+    }
+
+    static func loadReport(fileManager: FileManager) -> OperationJournalLoadReport {
+        guard let directory = try? defaultDirectory(fileManager: fileManager) else {
+            return .init(journals: [], unreadableCount: 0, directoryReadFailed: true)
+        }
+        return loadReport(from: directory, fileManager: fileManager)
     }
 
     static func loadAll(from directory: URL, fileManager: FileManager) -> [OperationJournal] {
+        loadReport(from: directory, fileManager: fileManager).journals
+    }
+
+    static func loadReport(from directory: URL, fileManager: FileManager) -> OperationJournalLoadReport {
         guard let urls = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else {
-            return []
+            return .init(journals: [], unreadableCount: 0, directoryReadFailed: true)
         }
-        return urls
-            .filter { $0.pathExtension == "json" }
-            .compactMap { try? read(from: $0) }
-            .sorted { $0.createdAt > $1.createdAt }
+        var journals: [OperationJournal] = []
+        var unreadableCount = 0
+        for url in urls where url.pathExtension == "json" {
+            do {
+                journals.append(try read(from: url))
+            } catch {
+                unreadableCount += 1
+            }
+        }
+        return .init(
+            journals: journals.sorted { $0.createdAt > $1.createdAt },
+            unreadableCount: unreadableCount,
+            directoryReadFailed: false
+        )
     }
 
     static func write(_ journal: OperationJournal, to url: URL) throws {
