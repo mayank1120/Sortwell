@@ -1,0 +1,560 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0CF2D2DDF182DDA3EAD0599F /* PrototypeStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9369AEE1FE07CEAB9F78B60 /* PrototypeStoreTests.swift */; };
+		1176C1CBCB32F7F6AC32FCB3 /* PreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45F4E79DD9304CC7056C12 /* PreferencesTests.swift */; };
+		14701AA18D7248F1395A732C /* FunctionalSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBE252698A9166839781453 /* FunctionalSafetyTests.swift */; };
+		511EE428E2DEC9EE79F3940F /* PreferencesModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FECD6D7FEF8CC173B087B24 /* PreferencesModels.swift */; };
+		60E31B41578D64E1F1CFE827 /* FileClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA2090C2A9268C1E7D7DBE1A /* FileClassifier.swift */; };
+		657A0E29565A335DB200CA9C /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64809D92D0A82CAC509E47AC /* PrototypeModels.swift */; };
+		70C5C516516B3BF5F36BAB9B /* ReviewWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B023F344F5A5F6653D76C2 /* ReviewWorkspaceView.swift */; };
+		747C36D4A14C315F26EF7DD1 /* WelcomeScanSummaryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCE005BA4079DDE6C9156352 /* WelcomeScanSummaryViews.swift */; };
+		749E7EBE22C3AA51DECFE85E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 391435F6AF14147A522BE56B /* Assets.xcassets */; };
+		7EF07617517B9D13F0EA23EF /* SortwellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEA314D42F3E5358323A729 /* SortwellApp.swift */; };
+		9C8F51603B3345DD0BC94AD2 /* PrototypeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5C18D57484B1697F4CE9CC /* PrototypeStore.swift */; };
+		9DFABB969A9C5A1F4430FEA0 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2F47E7F5FA82B544260AA0 /* RootView.swift */; };
+		9E96B6DB8C717FDCAE192F54 /* TelegramScenario.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D28D104D5C89E15720DBD4F /* TelegramScenario.swift */; };
+		A2315267BF6BA014DF894DD4 /* FileOperationExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 613117BEF9761B74F2133C44 /* FileOperationExecutor.swift */; };
+		A4F9C79A89258AA7C4C97F29 /* QuickLookPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05CE8C36CF34FAC74107EC0 /* QuickLookPreview.swift */; };
+		B916427290C95E2F7689743E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = ABAFA25A8BC23C7B8471873F /* PrivacyInfo.xcprivacy */; };
+		B9BC84FB780CFA35FC40E2DE /* LocalContentAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A542EBFBB16FEC493C0520 /* LocalContentAnalyzer.swift */; };
+		BA959A068795365E4B2FAA36 /* ClassificationAnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94409EC1D2357F1B3FBB47A2 /* ClassificationAnalysisTests.swift */; };
+		C35F256E9A08E6CF20D56A1C /* FolderScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209BF4AEA03903E76E3A7453 /* FolderScanner.swift */; };
+		D14AAEF799FF434080546407 /* FunctionalModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2BED293409282FF5D51462 /* FunctionalModels.swift */; };
+		E68B861BE930921A0401B609 /* SortwellAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C982C176D3620F1B0AD4502 /* SortwellAppDelegate.swift */; };
+		F75BD7829094E19682F2401E /* ConfirmationResultsActivityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D8DB50C63F0EC43FC77A9B /* ConfirmationResultsActivityViews.swift */; };
+		F8B3138D3BC396ECCF82303C /* VisualSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10A66BEA142D6F9CDDE1B4E8 /* VisualSnapshotTests.swift */; };
+		FA0F5DD90B8262550FD6EA39 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC66AF189563E91EB5C078 /* SettingsView.swift */; };
+		FA8548AB04D2588DAF665CB8 /* SortwellDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B706CDA99A173B1A664768 /* SortwellDesignSystem.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		21F85718BAA5018BAC3D0A5B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FD3A4ABDC2C6D3BDB72E44F7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F36D43646B0420AE5341A379;
+			remoteInfo = Sortwell;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0D28D104D5C89E15720DBD4F /* TelegramScenario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramScenario.swift; sourceTree = "<group>"; };
+		10A66BEA142D6F9CDDE1B4E8 /* VisualSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualSnapshotTests.swift; sourceTree = "<group>"; };
+		1C982C176D3620F1B0AD4502 /* SortwellAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortwellAppDelegate.swift; sourceTree = "<group>"; };
+		1F45F4E79DD9304CC7056C12 /* PreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesTests.swift; sourceTree = "<group>"; };
+		209BF4AEA03903E76E3A7453 /* FolderScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanner.swift; sourceTree = "<group>"; };
+		2B2BED293409282FF5D51462 /* FunctionalModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionalModels.swift; sourceTree = "<group>"; };
+		391435F6AF14147A522BE56B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3FECD6D7FEF8CC173B087B24 /* PreferencesModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesModels.swift; sourceTree = "<group>"; };
+		4AEA314D42F3E5358323A729 /* SortwellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortwellApp.swift; sourceTree = "<group>"; };
+		5CCC66AF189563E91EB5C078 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		613117BEF9761B74F2133C44 /* FileOperationExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationExecutor.swift; sourceTree = "<group>"; };
+		64809D92D0A82CAC509E47AC /* PrototypeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeModels.swift; sourceTree = "<group>"; };
+		65B706CDA99A173B1A664768 /* SortwellDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortwellDesignSystem.swift; sourceTree = "<group>"; };
+		7AC11D630305E6C4EF03E82E /* Sortwell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sortwell.entitlements; sourceTree = "<group>"; };
+		84453F1205EBE899B88A3A24 /* SortwellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SortwellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		85A542EBFBB16FEC493C0520 /* LocalContentAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalContentAnalyzer.swift; sourceTree = "<group>"; };
+		92D8DB50C63F0EC43FC77A9B /* ConfirmationResultsActivityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfirmationResultsActivityViews.swift; sourceTree = "<group>"; };
+		94409EC1D2357F1B3FBB47A2 /* ClassificationAnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassificationAnalysisTests.swift; sourceTree = "<group>"; };
+		ABAFA25A8BC23C7B8471873F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BA2090C2A9268C1E7D7DBE1A /* FileClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileClassifier.swift; sourceTree = "<group>"; };
+		BFBE252698A9166839781453 /* FunctionalSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionalSafetyTests.swift; sourceTree = "<group>"; };
+		C244C52F22DF31BFAEADB960 /* Sortwell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sortwell.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9369AEE1FE07CEAB9F78B60 /* PrototypeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeStoreTests.swift; sourceTree = "<group>"; };
+		D05CE8C36CF34FAC74107EC0 /* QuickLookPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLookPreview.swift; sourceTree = "<group>"; };
+		DCE005BA4079DDE6C9156352 /* WelcomeScanSummaryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScanSummaryViews.swift; sourceTree = "<group>"; };
+		EE5C18D57484B1697F4CE9CC /* PrototypeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeStore.swift; sourceTree = "<group>"; };
+		EF2F47E7F5FA82B544260AA0 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F8B023F344F5A5F6653D76C2 /* ReviewWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewWorkspaceView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		2B4F7B5C1BD423637624CBB3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C244C52F22DF31BFAEADB960 /* Sortwell.app */,
+				84453F1205EBE899B88A3A24 /* SortwellTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		459B8576CDA9FFF228C5B5B8 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				2B2BED293409282FF5D51462 /* FunctionalModels.swift */,
+				3FECD6D7FEF8CC173B087B24 /* PreferencesModels.swift */,
+				64809D92D0A82CAC509E47AC /* PrototypeModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		7454D849C0674E54C6E0961F /* App */ = {
+			isa = PBXGroup;
+			children = (
+				EE5C18D57484B1697F4CE9CC /* PrototypeStore.swift */,
+				1C982C176D3620F1B0AD4502 /* SortwellAppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AC6A1E3A973E0F3A73ED8AF4 = {
+			isa = PBXGroup;
+			children = (
+				D5A19781C06FFB7E1A10CCD0 /* Sortwell */,
+				CF1424CED1283E7354043A0F /* SortwellTests */,
+				2B4F7B5C1BD423637624CBB3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AF1921556247CA246FDF18D7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				92D8DB50C63F0EC43FC77A9B /* ConfirmationResultsActivityViews.swift */,
+				D05CE8C36CF34FAC74107EC0 /* QuickLookPreview.swift */,
+				F8B023F344F5A5F6653D76C2 /* ReviewWorkspaceView.swift */,
+				EF2F47E7F5FA82B544260AA0 /* RootView.swift */,
+				5CCC66AF189563E91EB5C078 /* SettingsView.swift */,
+				DCE005BA4079DDE6C9156352 /* WelcomeScanSummaryViews.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BF61EB3E419515723AE1A3A9 /* MockData */ = {
+			isa = PBXGroup;
+			children = (
+				0D28D104D5C89E15720DBD4F /* TelegramScenario.swift */,
+			);
+			path = MockData;
+			sourceTree = "<group>";
+		};
+		CF1424CED1283E7354043A0F /* SortwellTests */ = {
+			isa = PBXGroup;
+			children = (
+				94409EC1D2357F1B3FBB47A2 /* ClassificationAnalysisTests.swift */,
+				BFBE252698A9166839781453 /* FunctionalSafetyTests.swift */,
+				1F45F4E79DD9304CC7056C12 /* PreferencesTests.swift */,
+				C9369AEE1FE07CEAB9F78B60 /* PrototypeStoreTests.swift */,
+				10A66BEA142D6F9CDDE1B4E8 /* VisualSnapshotTests.swift */,
+			);
+			path = SortwellTests;
+			sourceTree = "<group>";
+		};
+		D5A19781C06FFB7E1A10CCD0 /* Sortwell */ = {
+			isa = PBXGroup;
+			children = (
+				391435F6AF14147A522BE56B /* Assets.xcassets */,
+				ABAFA25A8BC23C7B8471873F /* PrivacyInfo.xcprivacy */,
+				7AC11D630305E6C4EF03E82E /* Sortwell.entitlements */,
+				4AEA314D42F3E5358323A729 /* SortwellApp.swift */,
+				7454D849C0674E54C6E0961F /* App */,
+				DB1E5CE16EA268875321F5EA /* DesignSystem */,
+				BF61EB3E419515723AE1A3A9 /* MockData */,
+				459B8576CDA9FFF228C5B5B8 /* Models */,
+				FD57803166C3F55DF88B051F /* Services */,
+				AF1921556247CA246FDF18D7 /* Views */,
+			);
+			path = Sortwell;
+			sourceTree = "<group>";
+		};
+		DB1E5CE16EA268875321F5EA /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				65B706CDA99A173B1A664768 /* SortwellDesignSystem.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		FD57803166C3F55DF88B051F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				BA2090C2A9268C1E7D7DBE1A /* FileClassifier.swift */,
+				613117BEF9761B74F2133C44 /* FileOperationExecutor.swift */,
+				209BF4AEA03903E76E3A7453 /* FolderScanner.swift */,
+				85A542EBFBB16FEC493C0520 /* LocalContentAnalyzer.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		35F0C35B05182EA2EE27B45D /* SortwellTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 782E2FFBDE906332F7F4FD4F /* Build configuration list for PBXNativeTarget "SortwellTests" */;
+			buildPhases = (
+				15FB47BA0D2E1935036E5595 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D9F27591C28D4B2591516DBB /* PBXTargetDependency */,
+			);
+			name = SortwellTests;
+			packageProductDependencies = (
+			);
+			productName = SortwellTests;
+			productReference = 84453F1205EBE899B88A3A24 /* SortwellTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F36D43646B0420AE5341A379 /* Sortwell */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C653A94F0142DC0B816E756 /* Build configuration list for PBXNativeTarget "Sortwell" */;
+			buildPhases = (
+				DA3239F6298BFCDF3B5170A6 /* Sources */,
+				30978B6A57A64BB877D6257A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Sortwell;
+			packageProductDependencies = (
+			);
+			productName = Sortwell;
+			productReference = C244C52F22DF31BFAEADB960 /* Sortwell.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FD3A4ABDC2C6D3BDB72E44F7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					F36D43646B0420AE5341A379 = {
+						DevelopmentTeam = PUF87V84P2;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A883E9369A77EAE8C4A6C3A0 /* Build configuration list for PBXProject "Sortwell" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = AC6A1E3A973E0F3A73ED8AF4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F36D43646B0420AE5341A379 /* Sortwell */,
+				35F0C35B05182EA2EE27B45D /* SortwellTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		30978B6A57A64BB877D6257A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				749E7EBE22C3AA51DECFE85E /* Assets.xcassets in Resources */,
+				B916427290C95E2F7689743E /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		15FB47BA0D2E1935036E5595 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA959A068795365E4B2FAA36 /* ClassificationAnalysisTests.swift in Sources */,
+				14701AA18D7248F1395A732C /* FunctionalSafetyTests.swift in Sources */,
+				1176C1CBCB32F7F6AC32FCB3 /* PreferencesTests.swift in Sources */,
+				0CF2D2DDF182DDA3EAD0599F /* PrototypeStoreTests.swift in Sources */,
+				F8B3138D3BC396ECCF82303C /* VisualSnapshotTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA3239F6298BFCDF3B5170A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F75BD7829094E19682F2401E /* ConfirmationResultsActivityViews.swift in Sources */,
+				60E31B41578D64E1F1CFE827 /* FileClassifier.swift in Sources */,
+				A2315267BF6BA014DF894DD4 /* FileOperationExecutor.swift in Sources */,
+				C35F256E9A08E6CF20D56A1C /* FolderScanner.swift in Sources */,
+				D14AAEF799FF434080546407 /* FunctionalModels.swift in Sources */,
+				B9BC84FB780CFA35FC40E2DE /* LocalContentAnalyzer.swift in Sources */,
+				511EE428E2DEC9EE79F3940F /* PreferencesModels.swift in Sources */,
+				657A0E29565A335DB200CA9C /* PrototypeModels.swift in Sources */,
+				9C8F51603B3345DD0BC94AD2 /* PrototypeStore.swift in Sources */,
+				A4F9C79A89258AA7C4C97F29 /* QuickLookPreview.swift in Sources */,
+				70C5C516516B3BF5F36BAB9B /* ReviewWorkspaceView.swift in Sources */,
+				9DFABB969A9C5A1F4430FEA0 /* RootView.swift in Sources */,
+				FA0F5DD90B8262550FD6EA39 /* SettingsView.swift in Sources */,
+				7EF07617517B9D13F0EA23EF /* SortwellApp.swift in Sources */,
+				E68B861BE930921A0401B609 /* SortwellAppDelegate.swift in Sources */,
+				FA8548AB04D2588DAF665CB8 /* SortwellDesignSystem.swift in Sources */,
+				9E96B6DB8C717FDCAE192F54 /* TelegramScenario.swift in Sources */,
+				747C36D4A14C315F26EF7DD1 /* WelcomeScanSummaryViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D9F27591C28D4B2591516DBB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F36D43646B0420AE5341A379 /* Sortwell */;
+			targetProxy = 21F85718BAA5018BAC3D0A5B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0F330B8F75FB654FF015EFFB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		60F50F7C22A81B6FC190111D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sortwell/Sortwell.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PUF87V84P2;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Sortwell;
+				INFOPLIST_KEY_CFBundleShortVersionString = "$(MARKETING_VERSION)";
+				INFOPLIST_KEY_CFBundleVersion = "$(CURRENT_PROJECT_VERSION)";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sortwell.app;
+				PRODUCT_NAME = Sortwell;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		7AB005AE4F9B9F158B2AA880 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		9720E2185F3B9E2DB80BCBF4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sortwell/Sortwell.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PUF87V84P2;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Sortwell;
+				INFOPLIST_KEY_CFBundleShortVersionString = "$(MARKETING_VERSION)";
+				INFOPLIST_KEY_CFBundleVersion = "$(CURRENT_PROJECT_VERSION)";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sortwell.app;
+				PRODUCT_NAME = Sortwell;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D0E0AF1B3FF9CE4725B49E0E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sortwell.app.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Sortwell.app/Contents/MacOS/Sortwell";
+			};
+			name = Debug;
+		};
+		E059E7271FB24F8AAFDF7AAE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sortwell.app.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Sortwell.app/Contents/MacOS/Sortwell";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		782E2FFBDE906332F7F4FD4F /* Build configuration list for PBXNativeTarget "SortwellTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0E0AF1B3FF9CE4725B49E0E /* Debug */,
+				E059E7271FB24F8AAFDF7AAE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9C653A94F0142DC0B816E756 /* Build configuration list for PBXNativeTarget "Sortwell" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9720E2185F3B9E2DB80BCBF4 /* Debug */,
+				60F50F7C22A81B6FC190111D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A883E9369A77EAE8C4A6C3A0 /* Build configuration list for PBXProject "Sortwell" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F330B8F75FB654FF015EFFB /* Debug */,
+				7AB005AE4F9B9F158B2AA880 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FD3A4ABDC2C6D3BDB72E44F7 /* Project object */;
+}

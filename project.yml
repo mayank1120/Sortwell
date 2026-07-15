@@ -1,0 +1,52 @@
+name: Sortwell
+options:
+  bundleIdPrefix: com.sortwell
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+targets:
+  Sortwell:
+    type: application
+    platform: macOS
+    sources:
+      - Sortwell
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sortwell.app
+        PRODUCT_NAME: Sortwell
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Sortwell
+        INFOPLIST_KEY_CFBundleShortVersionString: $(MARKETING_VERSION)
+        INFOPLIST_KEY_CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: PUF87V84P2
+        CODE_SIGN_ENTITLEMENTS: Sortwell/Sortwell.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  SortwellTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - SortwellTests
+    dependencies:
+      - target: Sortwell
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sortwell.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Sortwell:
+    build:
+      targets:
+        Sortwell: all
+        SortwellTests: [test]
+    test:
+      targets:
+        - SortwellTests

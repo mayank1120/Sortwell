@@ -1,0 +1,10 @@
+.DS_Store
+DerivedData/
+.build/
+*.xcarchive
+*.xcresult
+*.dmg
+*.xcuserstate
+xcuserdata/
+dist/
+VisualSnapshots/*.png
